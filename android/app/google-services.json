@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "864389749573",
+    "project_id": "zestaevents-8027e",
+    "storage_bucket": "zestaevents-8027e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:864389749573:android:a32674543a7c346f5c7c2c",
+        "android_client_info": {
+          "package_name": "com.example.z_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASYrQsIK1NQRxqzYjbhhKCByT7mHlCMpk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:864389749573:android:8236641e45c1671c5c7c2c",
+        "android_client_info": {
+          "package_name": "com.example.zesta_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASYrQsIK1NQRxqzYjbhhKCByT7mHlCMpk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
