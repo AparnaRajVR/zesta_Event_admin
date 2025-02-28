@@ -1,4 +1,6 @@
 
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -21,8 +23,8 @@ class ApprovalPage extends StatelessWidget {
             return const Center(child: Text("User not found"));
           }
 
-          // 🔍 Debugging: Print Firestore document data
-          print("Firestore User Data: ${snapshot.data!.data()}");
+      
+          log("Firestore User Data: ${snapshot.data!.data()}");
 
           var user = snapshot.data!;
           return SingleChildScrollView(  // ✅ Fix overflow issue
