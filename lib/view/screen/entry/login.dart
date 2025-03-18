@@ -46,7 +46,6 @@ class LoginPage extends StatelessWidget {
                   child: isDesktop
                       ? Row(
                           children: [
-                           
                             Expanded(
                               flex: 1,
                               child: Container(
@@ -66,20 +65,18 @@ class LoginPage extends StatelessWidget {
                                         height: 100,
                                         width: 100,
                                       ),
-                                      
                                     ],
                                   ),
                                 ),
                               ),
                             ),
-                        
                             Expanded(
                               flex: 1,
-                              child: _buildLoginForm(),
+                              child: _buildLoginForm(context),
                             ),
                           ],
                         )
-                      : _buildLoginForm(),
+                      : _buildLoginForm(context),
                 ),
               ),
             );
@@ -89,7 +86,7 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLoginForm() {
+  Widget _buildLoginForm(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Form(
@@ -126,16 +123,15 @@ class LoginPage extends StatelessWidget {
                 validator: Validation.validatePassword,
               ),
               const SizedBox(height: 16),
-             
-
-              BlocConsumer<LoginBloc, LoginState>(
+              BlocConsumer<LoginBloc, AdminLoginState>(
                 listener: (context, state) {
                   if (state is LoginSuccess) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Login successful')),
                     );
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => DashboardScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => DashboardScreen()),
                       (route) => false,
                     );
                   } else if (state is LoginFailure) {

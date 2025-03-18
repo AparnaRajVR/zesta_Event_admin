@@ -92,7 +92,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: ListView(
               children: [
                 _drawerItem(context, Icons.dashboard, 'Dashboard', onTap: () => _selectedScreen.value = DashboardContent()),
-                _drawerItem(context, Icons.people_outline, 'Organizers', onTap: () => _selectedScreen.value = OrganizersScreen()),
+                _drawerItem(context, Icons.people_outline, 'Organizers', onTap: () => _selectedScreen.value = OrganizerListPage()),
                 _drawerItem(context, Icons.verified, 'Permissions', onTap: () => _selectedScreen.value = PermissionsPage()),
                 _drawerItem(context, Icons.report_outlined, 'Reports', onTap: () => _selectedScreen.value = ReportsScreen()),
               ],
@@ -138,7 +138,7 @@ class DashboardContent extends StatelessWidget {
       'assets/images/carusel1.jpg',
       'assets/images/carousel2.jpg',
       'assets/images/carousel3.jpeg',
-      'assets/images/carousel4.jpg',
+      'assets/images/carousel4.jpeg',
     ];
     
     return LayoutBuilder(

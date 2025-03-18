@@ -1,10 +1,10 @@
-part of 'dashboard_bloc_bloc.dart';
+// part of 'dashboard_bloc_bloc.dart';
 
-sealed class DashboardBlocState extends Equatable {
-  const DashboardBlocState();
+// sealed class DashboardBlocState extends Equatable {
+//   const DashboardBlocState();
   
-  @override
-  List<Object> get props => [];
-}
+//   @override
+//   List<Object> get props => [];
+// }
 
-final class DashboardBlocInitial extends DashboardBlocState {}
+// final class DashboardBlocInitial extends DashboardBlocState {}

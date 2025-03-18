@@ -8,6 +8,7 @@ import 'package:z_admin/view/screen/entry/login.dart';
 import 'package:z_admin/view/screen/entry/splash_screen.dart';
 import 'package:z_admin/viewmodel/dashboard/bloc/dashboard_bloc_bloc.dart';
 import 'package:z_admin/viewmodel/login_bloc/admin_login_bloc.dart';
+import 'package:z_admin/viewmodel/organize_list/bloc/organizer_list_bloc.dart';
 
 
 void main() async {
@@ -18,7 +19,7 @@ void main() async {
   );
 
   final firestoreService = FirestoreService();
-  await firestoreService.addAdminCredentials();
+  await firestoreService.addAdminUser();
 
   runApp(MyApp());
 }
@@ -32,10 +33,14 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<LoginBloc>(
           create: (context) => LoginBloc(),
+
         ),
-        // BlocProvider(
-        //   create: (context) => DashboardBloc(),
-        // ),
+        BlocProvider(
+          create: (context) => DashboardBloc(),
+        ),
+        BlocProvider<OrganizerBloc>(
+          create: (context) => OrganizerBloc(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

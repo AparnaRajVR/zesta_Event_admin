@@ -1,8 +1,10 @@
 
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:z_admin/viewmodel/approval_bloc/bloc/approval_bloc.dart';
+import 'package:z_admin/viewmodel/approval_bloc/bloc/approval_event.dart';
+import 'package:z_admin/viewmodel/approval_bloc/bloc/approval_state.dart';
 
 class ApprovalPage extends StatelessWidget {
   final String userId;
@@ -10,108 +12,252 @@ class ApprovalPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(title: const Text("Approval Details")),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text("User not found"));
-          }
-
-      
-          log("Firestore User Data: ${snapshot.data!.data()}");
-
-          var user = snapshot.data!;
-          return SingleChildScrollView(  // ✅ Fix overflow issue
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, // Align text properly
-                children: [
-                  Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          user['fullName'], 
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                        ),
-                        Text(user['organizationName']),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  _buildInfoTile(Icons.email, "Email", user['email']),
-                  _buildInfoTile(Icons.phone, "Phone", user['phone']),
-                  _buildInfoTile(Icons.category, "Type", user['organizerType']),
-                  _buildInfoTile(Icons.location_on, "Address", user['address'] ?? "Not provided"),
-
-                  const SizedBox(height: 20),
-                  _buildSectionTitle('Documents'),
-
-                  user['documentImage'] != null
-                      ? (user['documentImage'] is List<dynamic>
-                          ? Column(
-                              children: (user['documentImage'] as List<dynamic>).map((docUrl) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Image.network(docUrl, height: 150),
-                                );
-                              }).toList(),
-                            )
-                          : Image.network(user['documentImage'], height: 150)) // Single image case
-                      : const Text("No documents uploaded"),
-
-                  const SizedBox(height: 30),
-                  Row(
+    return BlocProvider(
+      create: (context) => ApprovalBloc(firestore: FirebaseFirestore.instance)..add(FetchUserData(userId)),
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text("Approval Details"),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          elevation: 2,
+        ),
+        body: BlocBuilder<ApprovalBloc, ApprovalState>(
+          builder: (context, state) {
+            if (state is ApprovalLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is ApprovalError) {
+              return Center(child: Text(state.message));
+            } else if (state is ApprovalLoaded) {
+              // Using data() method to convert DocumentSnapshot to Map
+              final userData = state.user.data() as Map<String, dynamic>;
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => _updateStatus(userId, "rejected"),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          child: const Text("Reject"),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => _updateStatus(userId, "approved"),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                          child: const Text("Approve"),
-                        ),
-                      ),
+                      _buildUserHeader(userData),
+                      const SizedBox(height: 20),
+                      _buildInfoCard(userData),
+                      const SizedBox(height: 20),
+                      _buildSectionTitle('Documents'),
+                      const SizedBox(height: 10),
+                      _buildDocumentsCard(userData),
+                      const SizedBox(height: 30),
+                      _buildActionButtons(context, userId),
                     ],
                   ),
-                ],
+                ),
+              );
+            }
+            return const Center(child: Text("Unexpected state"));
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserHeader(Map<String, dynamic> user) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: Column(
+            children: [
+              const CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.blue,
+                child: Icon(
+                  Icons.person,
+                  size: 40,
+                  color: Colors.white,
+                ),
               ),
+              const SizedBox(height: 16),
+              Text(
+                user['fullName'] ?? "User Name",
+                style: const TextStyle(
+                  fontSize: 24, 
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                user['organizationName'] ?? "Organization",
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(Map<String, dynamic> user) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
+              child: _buildSectionTitle('User Information'),
+            ),
+            const Divider(),
+            _buildInfoTile(Icons.email, "Email", user['email'] ?? "Not provided"),
+            _buildInfoTile(Icons.phone, "Phone", user['phone'] ?? "Not provided"),
+            _buildInfoTile(Icons.category, "Type", user['organizerType'] ?? "Not provided"),
+            _buildInfoTile(Icons.location_on, "Address", user['address'] ?? "Not provided"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentsCard(Map<String, dynamic> user) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: user['documentImage'] != null
+            ? (user['documentImage'] is List<dynamic>
+                ? Column(
+                    children: (user['documentImage'] as List<dynamic>).map((docUrl) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(docUrl, height: 150),
+                        ),
+                      );
+                    }).toList(),
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(user['documentImage'], height: 150),
+                    ),
+                  ))
+            : Container(
+                padding: const EdgeInsets.all(20),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: const Text(
+                  "No documents uploaded",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, String userId) {
+    return BlocListener<ApprovalBloc, ApprovalState>(
+      listener: (context, state) {
+        if (state is StatusUpdated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Status updated to ${state.status}"),
+              backgroundColor: state.status == "approved" ? Colors.green : Colors.red,
             ),
           );
-        },
+        }
+      },
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => context.read<ApprovalBloc>().add(UpdateUserStatus(userId, "rejected")),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text("Reject"),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => context.read<ApprovalBloc>().add(UpdateUserStatus(userId, "approved")),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text("Approve"),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildInfoTile(IconData icon, String label, String value) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      subtitle: Text(value),
+      leading: Icon(icon, color: Colors.blue),
+      title: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+          color: Colors.black54,
+        ),
+      ),
+      subtitle: Text(
+        value,
+        style: const TextStyle(
+          fontSize: 16,
+          color: Colors.black87,
+        ),
+      ),
     );
   }
 
   Widget _buildSectionTitle(String title) {
     return Text(
       title, 
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      style: const TextStyle(
+        fontSize: 18, 
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+      ),
     );
-  }
-
-  void _updateStatus(String userId, String status) {
-    FirebaseFirestore.instance.collection('users').doc(userId).update({'status': status});
   }
 }
