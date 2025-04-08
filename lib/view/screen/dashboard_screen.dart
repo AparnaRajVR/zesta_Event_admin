@@ -1,70 +1,146 @@
-import 'package:carousel_slider/carousel_slider.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:z_admin/view/screen/category%20content.dart';
 import 'package:z_admin/view/screen/entry/login.dart';
 import 'package:z_admin/view/screen/organizer_list.dart';
 import 'package:z_admin/view/screen/permission_screen.dart';
 import 'package:z_admin/view/screen/report_screen.dart';
+import 'package:z_admin/viewmodel/dashboard/bloc/dashboard_bloc_bloc.dart';
+import 'package:z_admin/viewmodel/dashboard/bloc/dashboard_bloc_event.dart';
 
-class DashboardCubit extends Cubit<bool> {
-  DashboardCubit() : super(false);
-  void toggleDrawer(bool isOpen) => emit(isOpen);
-}
+class DashboardScreen extends StatelessWidget {
+  DashboardScreen({super.key});
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
-  @override
-  _DashboardScreenState createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
   final ValueNotifier<Widget> _selectedScreen = ValueNotifier(DashboardContent());
+  final List<Map<String, dynamic>> _navigationItems = [
+    {'icon': Icons.dashboard, 'label': 'Dashboard', 'screen': DashboardContent()},
+    {'icon': Icons.people_outline, 'label': 'Organizers', 'screen': OrganizerListPage()},
+    {'icon': Icons.verified, 'label': 'Permissions', 'screen': PermissionsPage()},
+    {'icon': Icons.report_outlined, 'label': 'Reports', 'screen': ReportsScreen()},
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => DashboardCubit(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => DashboardBloc()..add(LoadDashboardData())),
+        // BlocProvider(create: (_) => DashboardCubit()),
+      ],
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 600;
+          final isDesktop = constraints.maxWidth > 1000;
+          final isTablet = constraints.maxWidth > 520;
+          final isPhone = constraints.maxWidth <= 520;
+
           return Scaffold(
             backgroundColor: Colors.grey[100],
-            appBar: isDesktop
-                ? null
-                : AppBar(
-                    backgroundColor: Colors.white,
-                    elevation: 0,
-                    leading: Builder(
-                      builder: (context) => IconButton(
-                        icon: const Icon(Icons.menu, color: Colors.black),
-                        onPressed: () => Scaffold.of(context).openDrawer(), // New Change: Open drawer properly
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 4,
+              leadingWidth: isDesktop ? 250 : null,
+              leading: isDesktop ? appLogo(context) : null,
+              title: !isDesktop ? appLogo(context) : null,
+              actions: isDesktop
+                  ? [
+                      ..._navigationItems.asMap().entries.map((entry) {
+                        final item = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: TextButton.icon(
+                            icon: Icon(item['icon'],
+                                color: _selectedScreen.value.runtimeType == item['screen'].runtimeType
+                                    ? Colors.blue
+                                    : Colors.grey),
+                            label: Text(item['label'],
+                                style: TextStyle(
+                                  color: _selectedScreen.value.runtimeType == item['screen'].runtimeType
+                                      ? Colors.blue
+                                      : Colors.grey[700],
+                                  fontWeight: _selectedScreen.value.runtimeType == item['screen'].runtimeType
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                )),
+                            onPressed: () => _selectedScreen.value = item['screen'],
+                          ),
+                        );
+                      }).toList(),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: VerticalDivider(color: Colors.grey),
                       ),
-                    ),
-                    title: const Text('Dashboard', style: TextStyle(color: Colors.black)),
-                  ),
-            drawer: isDesktop ? null : _buildDrawer(context), // New Change: Ensure drawer opens properly
-            body: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (isDesktop) SizedBox(width: 250, child: _buildDrawer(context)),
-                Expanded(
-                  child: ValueListenableBuilder(
-                    valueListenable: _selectedScreen,
-                    builder: (context, screen, child) {
-                      return screen;
-                    },
-                  ),
-                ),
-              ],
+                      Padding(
+                        padding: const EdgeInsets.only(right: 20),
+                        child: IconButton(
+                          icon: const Icon(Icons.logout, color: Colors.grey),
+                          tooltip: 'Logout',
+                          onPressed: () => Navigator.pushReplacement(
+                              context, MaterialPageRoute(builder: (_) => LoginPage())),
+                        ),
+                      ),
+                    ]
+                  : null,
             ),
+            drawer: isTablet ? _buildDrawer(context) : null,
+            body: ValueListenableBuilder(
+              valueListenable: _selectedScreen,
+              builder: (_, screen, __) => screen,
+            ),
+            bottomNavigationBar: isPhone
+                ? ValueListenableBuilder(
+                    valueListenable: _selectedScreen,
+                    builder: (_, screen, __) {
+                      return BottomNavigationBar(
+                        type: BottomNavigationBarType.fixed,
+                        currentIndex: _navigationItems.indexWhere(
+                          (item) => screen.runtimeType == item['screen'].runtimeType,
+                        ),
+                        selectedItemColor: Colors.blue,
+                        unselectedItemColor: Colors.grey,
+                        onTap: (index) {
+                          _selectedScreen.value = _navigationItems[index]['screen'];
+                        },
+                        items: _navigationItems.map((item) {
+                          return BottomNavigationBarItem(
+                            icon: Icon(item['icon']),
+                            label: item['label'],
+                          );
+                        }).toList(),
+                      );
+                    },
+                  )
+                : null,
           );
         },
       ),
     );
   }
 
+  Widget appLogo(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Icon(Icons.admin_panel_settings, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 10),
+          const Text('Admin Panel',
+              style: TextStyle(color: Colors.blue, fontSize: 18, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDrawer(BuildContext context) {
+    final currentWidget = _selectedScreen.value;
     return Drawer(
       elevation: 4,
       child: Column(
@@ -90,16 +166,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           Expanded(
             child: ListView(
-              children: [
-                _drawerItem(context, Icons.dashboard, 'Dashboard', onTap: () => _selectedScreen.value = DashboardContent()),
-                _drawerItem(context, Icons.people_outline, 'Organizers', onTap: () => _selectedScreen.value = OrganizerListPage()),
-                _drawerItem(context, Icons.verified, 'Permissions', onTap: () => _selectedScreen.value = PermissionsPage()),
-                _drawerItem(context, Icons.report_outlined, 'Reports', onTap: () => _selectedScreen.value = ReportsScreen()),
-              ],
+              children: _navigationItems.asMap().entries.map((entry) {
+                final item = entry.value;
+                return ListTile(
+                  leading: Icon(item['icon'],
+                      color: currentWidget.runtimeType == item['screen'].runtimeType
+                          ? Colors.blue
+                          : Colors.grey),
+                  title: Text(item['label'],
+                      style: TextStyle(
+                        color: currentWidget.runtimeType == item['screen'].runtimeType
+                            ? Colors.blue
+                            : Colors.grey[700],
+                        fontWeight: currentWidget.runtimeType == item['screen'].runtimeType
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      )),
+                  onTap: () {
+                    _selectedScreen.value = item['screen'];
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
             ),
           ),
           _drawerItem(context, Icons.logout, 'Logout',
-              onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()))),
+              onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginPage()))),
         ],
       ),
     );
@@ -111,113 +203,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
       title: Text(title, style: TextStyle(color: Colors.grey[700])),
       onTap: onTap,
     );
-  }
-}
-
-class DashboardContent extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(24),
-      child: Column(
-        children: [
-          _buildCarousel(),
-          const SizedBox(height: 24), // New Change: Added space between carousel and title
-          Center(child: Text('Dashboard Overview', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold))),
-          const SizedBox(height: 24),
-          _buildStatsCards(),
-          const SizedBox(height: 24),
-          _buildChart(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCarousel() {
-    final List<String> images = [
-      'assets/images/carusel1.jpg',
-      'assets/images/carousel2.jpg',
-      'assets/images/carousel3.jpeg',
-      'assets/images/carousel4.jpeg',
-    ];
-    
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SizedBox(
-          width: constraints.maxWidth, 
-          child: CarouselSlider(
-            options: CarouselOptions(
-              height: constraints.maxWidth * 0.4, // Adjust height based on width
-              autoPlay: true,
-              enlargeCenterPage: true,
-              viewportFraction: 1.0, // Ensures full width
-            ),
-            items: images.map((imagePath) {
-              return Container(
-                width: constraints.maxWidth,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(imagePath),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildStatsCards() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double cardWidth = constraints.maxWidth / 3 - 20; // Adjust card size dynamically
-        double cardHeight = constraints.maxWidth * 0.15; // Adjust height proportionally
-
-        if (constraints.maxWidth < 600) {
-          cardWidth = constraints.maxWidth / 2 - 20; // New Change: Adjust width for mobile to prevent overflow
-        }
-
-        return Wrap(
-          spacing: 24,
-          runSpacing: 24,
-          alignment: WrapAlignment.center,
-          children: [
-            _statCard('Total Organizer', 2500, Colors.blue, cardWidth, cardHeight),
-            _statCard('Active Events', 4533, Colors.purple, cardWidth, cardHeight),
-            _statCard('Booked Tickets', 9574, Colors.indigo, cardWidth, cardHeight),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _statCard(String title, int value, Color color, double width, double height) {
-    return Container(
-      width: width, // Responsive width
-      height: height, // Responsive height
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(title, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 18)),
-          const SizedBox(height: 8),
-          Text(value.toString(), style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChart() {
-    return Container(height: 400, child: LineChart(LineChartData(lineBarsData: [LineChartBarData(spots: [FlSpot(0, 100), FlSpot(1, 125), FlSpot(2, 160)], isCurved: true, color: Colors.blue, barWidth: 3)])));
   }
 }

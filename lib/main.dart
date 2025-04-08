@@ -6,6 +6,7 @@ import 'package:z_admin/service/firebase_service.dart';
 import 'package:z_admin/view/screen/dashboard_screen.dart';
 import 'package:z_admin/view/screen/entry/login.dart';
 import 'package:z_admin/view/screen/entry/splash_screen.dart';
+import 'package:z_admin/viewmodel/category_bloc/bloc/category_bloc.dart';
 import 'package:z_admin/viewmodel/dashboard/bloc/dashboard_bloc_bloc.dart';
 import 'package:z_admin/viewmodel/login_bloc/admin_login_bloc.dart';
 import 'package:z_admin/viewmodel/organize_list/bloc/organizer_list_bloc.dart';
@@ -40,6 +41,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<OrganizerBloc>(
           create: (context) => OrganizerBloc(),
+        ),
+         BlocProvider<CategoryBloc>(
+          create: (context) => CategoryBloc(),
         ),
       ],
       child: MaterialApp(
