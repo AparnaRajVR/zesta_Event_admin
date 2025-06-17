@@ -1,4 +1,5 @@
 
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,16 +21,36 @@ class ApprovalPage extends StatelessWidget {
           title: const Text("Approval Details"),
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
-          elevation: 2,
+           elevation: 2,
         ),
         body: BlocBuilder<ApprovalBloc, ApprovalState>(
           builder: (context, state) {
             if (state is ApprovalLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is ApprovalError) {
-              return Center(child: Text(state.message));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => context.read<ApprovalBloc>().add(FetchUserData(userId)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text("Retry"),
+                    ),
+                  ],
+                ),
+              );
             } else if (state is ApprovalLoaded) {
-              // Using data() method to convert DocumentSnapshot to Map
               final userData = state.user.data() as Map<String, dynamic>;
               return SingleChildScrollView(
                 child: Padding(
@@ -51,7 +72,7 @@ class ApprovalPage extends StatelessWidget {
                 ),
               );
             }
-            return const Center(child: Text("Unexpected state"));
+             return const Center(child: Text("Approved"));
           },
         ),
       ),
@@ -82,7 +103,7 @@ class ApprovalPage extends StatelessWidget {
               Text(
                 user['fullName'] ?? "User Name",
                 style: const TextStyle(
-                  fontSize: 24, 
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -149,7 +170,14 @@ class ApprovalPage extends StatelessWidget {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(docUrl, height: 150),
+                          child: Image.network(
+                            docUrl,
+                            height: 150,
+                            errorBuilder: (context, error, stackTrace) => const Text(
+                              "Failed to load image",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
                         ),
                       );
                     }).toList(),
@@ -161,7 +189,14 @@ class ApprovalPage extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(user['documentImage'], height: 150),
+                      child: Image.network(
+                        user['documentImage'],
+                        height: 150,
+                        errorBuilder: (context, error, stackTrace) => const Text(
+                          "Failed to load image",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
                     ),
                   ))
             : Container(
@@ -252,12 +287,13 @@ class ApprovalPage extends StatelessWidget {
 
   Widget _buildSectionTitle(String title) {
     return Text(
-      title, 
+      title,
       style: const TextStyle(
-        fontSize: 18, 
+        fontSize: 18,
         fontWeight: FontWeight.bold,
         color: Colors.black87,
       ),
     );
   }
 }
+
