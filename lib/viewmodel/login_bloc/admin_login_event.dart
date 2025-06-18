@@ -1,11 +1,12 @@
+
 // import 'package:equatable/equatable.dart';
 
-// abstract class LoginEvent extends Equatable {
+// abstract class AdminLoginEvent extends Equatable {
 //   @override
 //   List<Object?> get props => [];
 // }
 
-// class LoginButtonPressed extends LoginEvent {
+// class LoginButtonPressed extends AdminLoginEvent {
 //   final String username;
 //   final String password;
 
@@ -15,19 +16,15 @@
 //   List<Object?> get props => [username, password];
 // }
 
-import 'package:equatable/equatable.dart';
-
-abstract class AdminLoginEvent extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+abstract class AdminLoginEvent {}
 
 class LoginButtonPressed extends AdminLoginEvent {
   final String username;
   final String password;
 
   LoginButtonPressed({required this.username, required this.password});
-
-  @override
-  List<Object?> get props => [username, password];
 }
+
+class CheckLoginStatus extends AdminLoginEvent {}
+
+class LogoutEvent extends AdminLoginEvent {}
