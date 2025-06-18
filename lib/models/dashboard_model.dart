@@ -1,5 +1,3 @@
-
-
 import 'dart:ui';
 
 class DashboardStats {
@@ -8,5 +6,9 @@ class DashboardStats {
   final Color color;
   final String trend;
 
-  DashboardStats({required this.label, required this.amount, required this.color, required this.trend});
+  DashboardStats(
+      {required this.label,
+      required this.amount,
+      required this.color,
+      required this.trend});
 }

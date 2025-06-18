@@ -50,7 +50,7 @@ class LoginPage extends StatelessWidget {
                               flex: 1,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
+                                  color: AppColors.second.withOpacity( 0.8),
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(10),
                                     bottomLeft: Radius.circular(10),
@@ -158,7 +158,7 @@ class LoginPage extends StatelessWidget {
                       }
                     },
                     label: 'Login',
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.second,
                   );
                 },
               ),

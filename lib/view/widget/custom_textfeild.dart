@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 
 class CustomTextFormField extends StatelessWidget {
@@ -8,7 +6,7 @@ class CustomTextFormField extends StatelessWidget {
   final bool isPassword;
   final String? Function(String?)? validator;
   final Icon prefixIcon;
-  final  TextEditingController controller;
+  final TextEditingController controller;
 
   const CustomTextFormField({
     super.key,
